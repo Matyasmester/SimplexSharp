@@ -56,6 +56,7 @@
             this.NonBaseVariableBox.Name = "NonBaseVariableBox";
             this.NonBaseVariableBox.Size = new System.Drawing.Size(68, 30);
             this.NonBaseVariableBox.TabIndex = 0;
+            this.NonBaseVariableBox.Tag = "default";
             this.NonBaseVariableBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.NonBaseVariableBox.Value = new decimal(new int[] {
             2,
@@ -72,6 +73,7 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(182, 25);
             this.label1.TabIndex = 1;
+            this.label1.Tag = "default";
             this.label1.Text = "Nembázis változók:";
             // 
             // label2
@@ -82,6 +84,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(138, 25);
             this.label2.TabIndex = 3;
+            this.label2.Tag = "default";
             this.label2.Text = "Bázisváltozók:";
             // 
             // BaseVariableBox
@@ -101,6 +104,7 @@
             this.BaseVariableBox.Name = "BaseVariableBox";
             this.BaseVariableBox.Size = new System.Drawing.Size(68, 30);
             this.BaseVariableBox.TabIndex = 2;
+            this.BaseVariableBox.Tag = "default";
             this.BaseVariableBox.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             this.BaseVariableBox.Value = new decimal(new int[] {
             2,
@@ -116,6 +120,7 @@
             this.BeginButton.Name = "BeginButton";
             this.BeginButton.Size = new System.Drawing.Size(262, 107);
             this.BeginButton.TabIndex = 4;
+            this.BeginButton.Tag = "default";
             this.BeginButton.Text = "Számolj!";
             this.BeginButton.UseVisualStyleBackColor = true;
             this.BeginButton.Click += new System.EventHandler(this.BeginButton_Click);
@@ -129,6 +134,7 @@
             this.PivotBox.Name = "PivotBox";
             this.PivotBox.Size = new System.Drawing.Size(150, 33);
             this.PivotBox.TabIndex = 5;
+            this.PivotBox.Tag = "default";
             this.PivotBox.SelectedIndexChanged += new System.EventHandler(this.PivotBox_SelectedIndexChanged);
             // 
             // label3
@@ -139,6 +145,7 @@
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(133, 25);
             this.label3.TabIndex = 6;
+            this.label3.Tag = "default";
             this.label3.Text = "Pivot szabály:";
             // 
             // MainForm

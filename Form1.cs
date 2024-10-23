@@ -23,11 +23,14 @@ namespace Simplex
         private const int xPadding = 50;
         private const int yPadding = 40;
 
+        private const string DefaultTag = "default";
+
         private readonly Font baseFont = new Font("Microsoft Sans Serif", 12);
 
-        private List<Control> currentDictionary = new List<Control>();
-
         private string[] pivotRules = new string[] { "Klasszikus", "Bland" };
+
+        private List<List<NumericUpDown>> currentDict = new List<List<NumericUpDown>>();
+
         public MainForm()
         {
             InitializeComponent();
@@ -39,18 +42,6 @@ namespace Simplex
             PivotBox.SelectedIndex = 0;
         }
 
-        // Enable double buffering to combat flickering
-        // Adds to smoothness
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams handleParam = base.CreateParams;
-                handleParam.ExStyle |= 0x02000000;   // WS_EX_COMPOSITED       
-                return handleParam;
-            }
-        }
-
         private void MainForm_Load(object sender, EventArgs e)
         {
 
@@ -59,25 +50,36 @@ namespace Simplex
         private void InstantiateControls()
         {
             int currY = startPoint.Y;
+            int x = startPoint.X;
 
             // Add base variables, non-base variables
             for (int i = 0; i < BaseVariableBox.Value; i++)
             {
                 int baseIndex = (i + 1) + (int)NonBaseVariableBox.Value;
-                Label baseVariableLabel = CreateDefaultLabel("x" + baseIndex + " = ", new Point(startPoint.X - baseLabelWidth, currY));
+                Label baseVariableLabel = CreateDefaultLabel("x" + baseIndex + " = ", new Point(x - baseLabelWidth, currY));
 
                 baseVariableLabel.Width = baseLabelWidth;
                 baseVariableLabel.ForeColor = Color.DarkRed;
 
                 this.Controls.Add(baseVariableLabel);
-                this.currentDictionary.Add(baseVariableLabel);
 
-                AddRow(new Point(startPoint.X, currY));
+                AddRow(new Point(x, currY));
 
                 currY += yPadding;
             }
 
+            currY += yPadding;
+
             // Add function 
+            Label functionLabel = CreateDefaultLabel("max: z = ", new Point(x - baseLabelWidth, currY));
+
+            functionLabel.ForeColor = Color.DarkViolet;
+            functionLabel.Width = baseLabelWidth;
+
+            this.Controls.Add(functionLabel);
+
+            AddRow(new Point(x, currY));
+
         }
 
         private void AddRow(Point location)
@@ -85,10 +87,12 @@ namespace Simplex
             int currX = location.X;
             int y = location.Y;
 
+            List<NumericUpDown> row = new List<NumericUpDown>();
+
             NumericUpDown constantBox = CreateDefaultUpDown(new Point(currX, y));
 
-            currentDictionary.Add(constantBox);
             this.Controls.Add(constantBox);
+            row.Add(constantBox);
 
             currX += 75;
 
@@ -97,7 +101,6 @@ namespace Simplex
                 Label plusLabel = CreateDefaultLabel("+", new Point(currX, y));
 
                 this.Controls.Add(plusLabel);
-                currentDictionary.Add(plusLabel);
 
                 currX += xPadding;
 
@@ -110,23 +113,38 @@ namespace Simplex
                 this.Controls.Add(label);
                 this.Controls.Add(upDown);
 
-                currentDictionary.Add(label);
-                currentDictionary.Add(upDown);
+                row.Add(upDown);
 
                 currX += xPadding;
             }
+
+            currentDict.Add(row);
         }
 
         private void ClearAddedControls()
         {
-            // TODO optimize
-            foreach(Control control in currentDictionary)
+            List<Control> toRemove = GetNotTaggedControls(DefaultTag);
+
+            foreach (Control control in toRemove)
             {
-                control.Dispose();
                 this.Controls.Remove(control);
+                control.Dispose();
             }
 
-            currentDictionary.Clear();
+            currentDict.Clear();
+        }
+
+        private List<Control> GetNotTaggedControls(string tag)
+        {
+            List<Control> retval = new List<Control>();
+
+            foreach(Control control in this.Controls)
+            {
+                string tagStr = control.Tag == null ? "" : control.Tag.ToString();
+                if (!tagStr.Equals(tag)) retval.Add(control);
+            }
+
+            return retval;
         }
 
         private void NonBaseVariableBox_ValueChanged(object sender, EventArgs e)
@@ -145,12 +163,51 @@ namespace Simplex
 
         private void BeginButton_Click(object sender, EventArgs e)
         {
+            int nonBaseVariableCount = (int)NonBaseVariableBox.Value;
 
+            Simplex.dict.Clear();
+
+            for(int i = 0; i < currentDict.Count - 1; i++)
+            {
+                var row = new List<KeyValuePair<string, double>>();
+
+                var current = currentDict[i];
+
+                row.Add(new KeyValuePair<string, double>("c", (double)current.First().Value));
+
+                for (int k = 1; k < current.Count; k++)
+                {
+                    string nonBaseVarName = "x" + k;
+
+                    row.Add(new KeyValuePair<string, double>(nonBaseVarName, (double)current[k].Value));
+                }
+
+                string baseVarName = "x" + (i + 1 + nonBaseVariableCount);
+
+                Simplex.dict.Add(new KeyValuePair<string, List<KeyValuePair<string, double>>>(baseVarName, row));
+            }
+
+            var function = new List<KeyValuePair<string, double>>();
+
+            var functionRow = currentDict.Last();
+
+            function.Add(new KeyValuePair<string, double>("c", (double)functionRow.First().Value));
+
+            for (int i = 1; i < functionRow.Count; i++)
+            {
+                string nonBaseVarName = "x" + i;
+
+                var current = functionRow[i];
+
+                function.Add(new KeyValuePair<string, double>(nonBaseVarName, (double)current.Value));
+            }
+
+            Simplex.function = function;
         }
 
         private void PivotBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-
+            
         }
 
         private Label CreateDefaultLabel(string text, Point location)
@@ -171,7 +228,8 @@ namespace Simplex
 
             upDown.Location = location;
             upDown.Value = 0;
-            upDown.Minimum = -9999;
+            upDown.Minimum = -999;
+            upDown.Maximum = 999;
             upDown.Font = baseFont;
             upDown.Enabled = true;
             upDown.Size = upDownSize;
