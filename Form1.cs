@@ -203,6 +203,10 @@ namespace Simplex
             }
 
             Simplex.function = function;
+
+            Simplex.Optimize((PivotRule)PivotBox.SelectedIndex);
+
+            MessageBox.Show(Simplex.GetEventLog());
         }
 
         private void PivotBox_SelectedIndexChanged(object sender, EventArgs e)
