@@ -15,17 +15,19 @@ namespace Simplex
 
         private static string eventLog = string.Empty;
 
+        private static bool isNotLimited = false;
+
         private static void IterateCurrent(PivotRule rule)
         {
             // Choose entering variable from positive function coefficients
-            var positiveCoeffs = function.Where(x => x.Value > 0);
+            var positiveCoeffs = function.FindAll(x => x.Value > 0 && !x.Key.Equals("c"));
 
             KeyValuePair<string, double> enteringVariable;
 
             if(rule == PivotRule.Classic)
             {
                 // Select lowest index of biggest coefficient
-                enteringVariable = positiveCoeffs.First(x => x.Value == positiveCoeffs.Max(y => y.Value) && !x.Key.Equals("c"));
+                enteringVariable = positiveCoeffs.First(x => x.Value == positiveCoeffs.Max(y => y.Value));
             }
             else
             {
@@ -68,7 +70,8 @@ namespace Simplex
 
             if(leavingVariableRow.Value == null)
             {
-                eventLog += " --- Nem tudtunk kilepo valtozot valasztani, tehat a feladat nem korlatos. --- ";
+                isNotLimited = true;
+
                 return;
             }
 
@@ -81,17 +84,21 @@ namespace Simplex
             // Now we express the entering from the leaving variable's row
             int leavingVariableIndex = dict.IndexOf(leavingVariableRow);
 
-            //leavingVariableRow.Value.RemoveAll(x => x.Key.Equals(enteringVariable.Key));
+            double enteringValue = leavingVariableRow.Value.First(x => x.Key.Equals(enteringVariable.Key)).Value;
+
+            leavingVariableRow.Value.RemoveAll(x => x.Key.Equals(enteringVariable.Key));
 
             var pivotRow = new KeyValuePair<string, List<KeyValuePair<string, double>>>(enteringVariable.Key, leavingVariableRow.Value);
 
             pivotRow.Value.Add(new KeyValuePair<string, double>(leavingVariableRow.Key, -1));
 
+            //double pivotEnteringValue = pivotRow.Value.First(x => x.Key.Equals(enteringVariable.Key)).Value;
+
             for(int i = 0; i < pivotRow.Value.Count; i++)
             {
                 var current = pivotRow.Value[i];
 
-                pivotRow.Value[i] = new KeyValuePair<string, double>(current.Key, current.Value / enteringVariable.Value);
+                pivotRow.Value[i] = new KeyValuePair<string, double>(current.Key, -1 * current.Value / enteringValue);
             }
 
             dict[leavingVariableIndex] = pivotRow;
@@ -105,41 +112,68 @@ namespace Simplex
 
                 var row = dict[i].Value;
 
-                var currentEntering = row.First(x => x.Key.Equals(enteringVariable.Key));
+                var newRow = new KeyValuePair<string, List<KeyValuePair<string, double>>>(varName, new List<KeyValuePair<string, double>>());
+
+                var currentEntering = row.Any(x => x.Key.Equals(enteringVariable.Key)) ?
+
+                                    row.First(x => x.Key.Equals(enteringVariable.Key)) :
+
+                                    new KeyValuePair<string, double>(enteringVariable.Key, 0);
 
                 double coefficient = currentEntering.Value;
 
-                int rowLength = row.Count;
-
-                for(int k = 0; k < rowLength; k++)
+                // Pivotrowban menjünk inkább
+                for(int k = 0; k < pivotRow.Value.Count; k++)
                 {
-                    var current = row[k];
+                    var pivot = pivotRow.Value[k];
 
-                    var pivot = pivotRow.Value.First(x => x.Key.Equals(current.Key));
+                    if (pivot.Key.Equals(enteringVariable.Key)) continue;
+
+                    var current = row.Any(x => x.Key.Equals(pivot.Key)) ? 
+
+                                row.First(x => x.Key.Equals(pivot.Key)) : 
+
+                                new KeyValuePair<string, double>(pivot.Key, 0);
+
                     double newValue = current.Value + (pivot.Value * coefficient);
 
                     var substituted = new KeyValuePair<string, double>(current.Key, newValue);
 
-                    row[k] = substituted;
+                    newRow.Value.Add(substituted);
                 }
 
-                dict[i] = new KeyValuePair<string, List<KeyValuePair<string, double>>>(varName, row);
+                dict[i] = newRow;
             }
 
+            var funcEntering = function.Any(x => x.Key.Equals(enteringVariable.Key)) ?
+
+                             function.First(x => x.Key.Equals(enteringVariable.Key)) : 
+
+                             new KeyValuePair<string, double>(enteringVariable.Key, 0);
+
+            double funcCoefficient = funcEntering.Value;
+
+            var newFunc = new List<KeyValuePair<string, double>>();
+
             // In the function as well
-            for(int i = 0; i < function.Count; i++)
+            for (int i = 0; i < pivotRow.Value.Count; i++)
             {
-                var current = function[i];
+                var pivot = pivotRow.Value[i];
 
-                var entering = function.First(x => x.Key.Equals(enteringVariable.Key));
-                var pivot = pivotRow.Value.First(x => x.Key.Equals(current.Key));
+                var current = function.Any(x => x.Key.Equals(pivot.Key)) ?
 
-                double newValue = current.Value + (pivot.Value * entering.Value);
+                                function.First(x => x.Key.Equals(pivot.Key)) :
+
+                                new KeyValuePair<string, double>(pivot.Key, 0);
+
+                double newValue = current.Value + (pivot.Value * funcCoefficient);
 
                 var substituted = new KeyValuePair<string, double>(current.Key, newValue);
 
-                function[i] = substituted;
+                newFunc.Add(substituted);
             }
+
+            function = newFunc;
         }
 
         private static bool IsCurrentOptimal()
@@ -176,7 +210,7 @@ namespace Simplex
                 {
                     var currentVar = row[k];
 
-                    retval += " + " + currentVar.Key + "*" + currentVar.Value;
+                    retval += " + " + currentVar.Value + " * " + currentVar.Key;
                 }
 
                 retval += "\n";
@@ -190,7 +224,7 @@ namespace Simplex
             {
                 var current = function[i];
 
-                retval += " + " + current.Key + "*" + current.Value;
+                retval += " + " + current.Value + " * " + current.Key;
             }
 
             return retval;
@@ -202,17 +236,18 @@ namespace Simplex
             int nIterations = 0;
 
             // Iterate until optimal
-            while(!IsCurrentOptimal())
+            while(!IsCurrentOptimal() && !isNotLimited)
             {
                 IterateCurrent(rule);
                 nIterations++;
 
                 eventLog += MakeTextDump();
 
-                eventLog += "\n--- " + nIterations + ". iteracio vege. ---\n";
+                eventLog += "\n\n--- " + nIterations + ". iteracio vege. ---\n";
             }
 
-            eventLog += "--- Optimalis szotarra jutottunk. ---";
+            if(!isNotLimited) eventLog += "--- Optimalis szotarra jutottunk. ---";
+            else eventLog += "Nem tudtunk kilepo valtozot valasztani, tehat a feladat nem korlatos.";
         }
 
         public static string GetEventLog()
