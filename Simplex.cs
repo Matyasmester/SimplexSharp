@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Simplex
 {
-    public static class Simplex
+    internal static class Simplex
     {
         // :D
-        public static List<KeyValuePair<string, List<KeyValuePair<string, double>>>> dict = new List<KeyValuePair<string, List<KeyValuePair<string, double>>>>();
+        public static List<BaseVariable> dict = new List<BaseVariable>();
 
-        public static List<KeyValuePair<string, double>> function = new List<KeyValuePair<string, double>>();
+        public static SimplexFunction function = new SimplexFunction();
 
         private static string eventLog = string.Empty;
 
@@ -20,39 +21,39 @@ namespace Simplex
         private static void IterateCurrent(PivotRule rule)
         {
             // Choose entering variable from positive function coefficients
-            var positiveCoeffs = function.FindAll(x => x.Value > 0 && !x.Key.Equals("c"));
+            var positiveCoeffs = function.Variables.FindAll(x => x.Coefficient > 0 && !x.Name.Equals("c"));
 
-            KeyValuePair<string, double> enteringVariable;
+            NonBaseVariable enteringVariable;
 
             if(rule == PivotRule.Classic)
             {
                 // Select lowest index of biggest coefficient
-                enteringVariable = positiveCoeffs.First(x => x.Value == positiveCoeffs.Max(y => y.Value));
+                enteringVariable = positiveCoeffs.First(x => x.Coefficient == positiveCoeffs.Max(y => y.Coefficient));
             }
             else
             {
                 // Select lowest index 
-                enteringVariable = positiveCoeffs.First(x => !x.Key.Equals("c"));
+                enteringVariable = positiveCoeffs.First();
             }
 
-            eventLog += "Valasztott belepo valtozo: " + enteringVariable.Key + "\n";
+            eventLog += "Valasztott belepo valtozo: " + enteringVariable.Name + "\n";
 
             // Find negative coeffs in every base variable line, then get the minimum 
             // of ratio (coeff / constant)
             double minimumRatio = double.MaxValue;
 
-            KeyValuePair<string, List<KeyValuePair<string, double>>> leavingVariableRow = default;
+            BaseVariable leavingVariable = default;
             double leavingConstant = 0;
 
-            foreach (var row in dict)
+            foreach (BaseVariable baseVar in dict)
             {
-                double constantValue = row.Value.First(x => x.Key.Equals("c")).Value;
+                double constantValue = baseVar.Constant;
 
-                foreach(var x in row.Value)
+                foreach(NonBaseVariable nonBaseVar in baseVar.Variables)
                 {
-                    if(!x.Key.Equals(enteringVariable.Key)) continue;
+                    if(!nonBaseVar.Name.Equals(enteringVariable.Name)) continue;
 
-                    double currentValue = x.Value;
+                    double currentValue = nonBaseVar.Coefficient;
 
                     if(currentValue < 0)
                     {
@@ -61,14 +62,14 @@ namespace Simplex
                         if(ratio < minimumRatio)
                         {
                             minimumRatio = ratio;
-                            leavingVariableRow = row;
+                            leavingVariable = baseVar;
                             leavingConstant = constantValue;
                         }
                     }
                 }
             }
 
-            if(leavingVariableRow.Value == null)
+            if(leavingVariable.Variables == default)
             {
                 isNotLimited = true;
 
@@ -78,99 +79,108 @@ namespace Simplex
             // We have a degenerate base, we make note of this
             if (leavingConstant == 0) eventLog += "[!] Degeneralt szotarunk van. [!]\n";
 
-            eventLog += "Legkisebb talalt hanyados: " + minimumRatio + "\n";
-            eventLog += "Valasztott kilepo valtozo: " + leavingVariableRow.Key + "\n\n";
+            eventLog += "Legkisebb talalt hanyados: " + Math.Round(minimumRatio, 3) + "\n";
+            eventLog += "Valasztott kilepo valtozo: " + leavingVariable.Name + "\n\n";
 
             // Now we express the entering from the leaving variable's row
-            int leavingVariableIndex = dict.IndexOf(leavingVariableRow);
+            int leavingVariableIndex = dict.IndexOf(leavingVariable);
 
-            double enteringValue = leavingVariableRow.Value.First(x => x.Key.Equals(enteringVariable.Key)).Value;
+            double enteringValue = leavingVariable.Variables.First(x => x.Name.Equals(enteringVariable.Name)).Coefficient;
 
-            leavingVariableRow.Value.RemoveAll(x => x.Key.Equals(enteringVariable.Key));
+            leavingVariable.Variables.RemoveAll(x => x.Name.Equals(enteringVariable.Name));
 
-            var pivotRow = new KeyValuePair<string, List<KeyValuePair<string, double>>>(enteringVariable.Key, leavingVariableRow.Value);
+            BaseVariable pivotVar = new BaseVariable(enteringVariable.Name);
+            pivotVar.Constant = -1 * leavingVariable.Constant / enteringValue;
 
-            pivotRow.Value.Add(new KeyValuePair<string, double>(leavingVariableRow.Key, -1));
-
-            //double pivotEnteringValue = pivotRow.Value.First(x => x.Key.Equals(enteringVariable.Key)).Value;
-
-            for(int i = 0; i < pivotRow.Value.Count; i++)
+            foreach(NonBaseVariable var in leavingVariable.Variables)
             {
-                var current = pivotRow.Value[i];
-
-                pivotRow.Value[i] = new KeyValuePair<string, double>(current.Key, -1 * current.Value / enteringValue);
+                pivotVar.AddVariable(var);
             }
 
-            dict[leavingVariableIndex] = pivotRow;
+            pivotVar.AddVariable(new NonBaseVariable(leavingVariable.Name, -1));
+
+            for(int i = 0; i < pivotVar.Variables.Count; i++)
+            {
+                var current = pivotVar.Variables[i];
+
+                pivotVar.Variables[i] = new NonBaseVariable(current.Name, -1 * current.Coefficient / enteringValue);
+            }
+
+            dict[leavingVariableIndex] = pivotVar;
 
             // Lastly, substitute this variable in every row
             for (int i = 0; i < dict.Count; i++)
             {
-                string varName = dict[i].Key;
+                string varName = dict[i].Name;
 
-                if(varName.Equals(enteringVariable.Key)) continue;
+                if(varName.Equals(enteringVariable.Name)) continue;
 
-                var row = dict[i].Value;
+                var row = dict[i].Variables;
 
-                var newRow = new KeyValuePair<string, List<KeyValuePair<string, double>>>(varName, new List<KeyValuePair<string, double>>());
+                BaseVariable newRow = new BaseVariable(varName);
 
-                var currentEntering = row.Any(x => x.Key.Equals(enteringVariable.Key)) ?
+                NonBaseVariable currentEntering = row.Any(x => x.Name.Equals(enteringVariable.Name)) ?
 
-                                    row.First(x => x.Key.Equals(enteringVariable.Key)) :
+                                    row.First(x => x.Name.Equals(enteringVariable.Name)) :
 
-                                    new KeyValuePair<string, double>(enteringVariable.Key, 0);
+                                    new NonBaseVariable(enteringVariable.Name, 0);
 
-                double coefficient = currentEntering.Value;
+                double coefficient = currentEntering.Coefficient;
 
-                // Pivotrowban menjünk inkább
-                for(int k = 0; k < pivotRow.Value.Count; k++)
+                newRow.Constant = dict[i].Constant + (coefficient * pivotVar.Constant);
+
+                for(int k = 0; k < pivotVar.Variables.Count; k++)
                 {
-                    var pivot = pivotRow.Value[k];
+                    NonBaseVariable pivot = pivotVar.Variables[k];
 
-                    if (pivot.Key.Equals(enteringVariable.Key)) continue;
+                    if (pivot.Name.Equals(enteringVariable.Name)) continue;
 
-                    var current = row.Any(x => x.Key.Equals(pivot.Key)) ? 
+                    NonBaseVariable current = row.Any(x => x.Name.Equals(pivot.Name)) ? 
 
-                                row.First(x => x.Key.Equals(pivot.Key)) : 
+                                row.First(x => x.Name.Equals(pivot.Name)) : 
 
-                                new KeyValuePair<string, double>(pivot.Key, 0);
+                                new NonBaseVariable(pivot.Name, 0);
 
-                    double newValue = current.Value + (pivot.Value * coefficient);
+                    double newValue = current.Coefficient + (pivot.Coefficient * coefficient);
 
-                    var substituted = new KeyValuePair<string, double>(current.Key, newValue);
+                    NonBaseVariable substituted = new NonBaseVariable(current.Name, newValue);
 
-                    newRow.Value.Add(substituted);
+                    newRow.AddVariable(substituted);
                 }
 
                 dict[i] = newRow;
             }
 
-            var funcEntering = function.Any(x => x.Key.Equals(enteringVariable.Key)) ?
+            NonBaseVariable funcEntering = function.Variables.Any(x => x.Name.Equals(enteringVariable.Name)) ?
 
-                             function.First(x => x.Key.Equals(enteringVariable.Key)) : 
+                             function.Variables.First(x => x.Name.Equals(enteringVariable.Name)) : 
 
-                             new KeyValuePair<string, double>(enteringVariable.Key, 0);
+                             new NonBaseVariable(enteringVariable.Name, 0);
 
-            double funcCoefficient = funcEntering.Value;
+            double funcCoefficient = funcEntering.Coefficient;
 
-            var newFunc = new List<KeyValuePair<string, double>>();
+            SimplexFunction newFunc = new SimplexFunction();
+
+            newFunc.Constant = function.Constant + (pivotVar.Constant * funcCoefficient);
 
             // In the function as well
-            for (int i = 0; i < pivotRow.Value.Count; i++)
+            for (int i = 0; i < pivotVar.Variables.Count; i++)
             {
-                var pivot = pivotRow.Value[i];
+                var pivot = pivotVar.Variables[i];
 
-                var current = function.Any(x => x.Key.Equals(pivot.Key)) ?
+                if (pivot.Name.Equals(enteringVariable.Name)) continue;
 
-                                function.First(x => x.Key.Equals(pivot.Key)) :
+                NonBaseVariable current = function.Variables.Any(x => x.Name.Equals(pivot.Name)) ?
 
-                                new KeyValuePair<string, double>(pivot.Key, 0);
+                                function.Variables.First(x => x.Name.Equals(pivot.Name)) :
 
-                double newValue = current.Value + (pivot.Value * funcCoefficient);
+                                new NonBaseVariable(pivot.Name, 0);
 
-                var substituted = new KeyValuePair<string, double>(current.Key, newValue);
+                double newValue = current.Coefficient + (pivot.Coefficient * funcCoefficient);
 
-                newFunc.Add(substituted);
+                NonBaseVariable substituted = new NonBaseVariable(current.Name, newValue);
+
+                newFunc.AddVariable(substituted);
             }
 
             function = newFunc;
@@ -182,11 +192,11 @@ namespace Simplex
             // Meaning the function has a non-negative constant value,
             // and the variables all have negative coefficients
 
-            if (function.First(x => x.Key.Equals("c")).Value < 0) return false;
+            if (function.Constant < 0) return false;
 
-            for(int i = 1; i < function.Count; i++)
+            for(int i = 0; i < function.Variables.Count; i++)
             {
-                double coefficient = function[i].Value;
+                double coefficient = function.Variables[i].Coefficient;
 
                 if(coefficient > 0) return false;
             }
@@ -202,30 +212,14 @@ namespace Simplex
 
             for(int i = 0; i < dict.Count; i++)
             {
-                var row = dict[i].Value;
-
-                retval += dict[i].Key + " = " + row[0].Value;
-
-                for(int k = 1; k < row.Count; k++)
-                {
-                    var currentVar = row[k];
-
-                    retval += " + " + currentVar.Value + " * " + currentVar.Key;
-                }
+                retval += dict[i].ToString();
 
                 retval += "\n";
             }
 
             retval += "-----------------------------\n";
 
-            retval += "z = " + function[0].Value;
-
-            for(int i = 1; i < function.Count; i++)
-            {
-                var current = function[i];
-
-                retval += " + " + current.Value + " * " + current.Key;
-            }
+            retval += function.ToString() + "\n";
 
             return retval;
         }
@@ -238,8 +232,11 @@ namespace Simplex
             // Iterate until optimal
             while(!IsCurrentOptimal() && !isNotLimited)
             {
-                IterateCurrent(rule);
                 nIterations++;
+
+                eventLog += "\n--- " + nIterations + ". iteracio kezdete. ---\n\n";
+
+                IterateCurrent(rule);
 
                 eventLog += MakeTextDump();
 
@@ -253,6 +250,16 @@ namespace Simplex
         public static string GetEventLog()
         {
             return eventLog;
+        }
+
+        public static bool SaveLog(string path)
+        {
+            try
+            {
+                File.WriteAllText(path, eventLog);
+                return true;
+            }
+            catch (Exception) { return false; }
         }
     }
 }

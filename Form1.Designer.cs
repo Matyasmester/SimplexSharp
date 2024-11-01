@@ -35,6 +35,8 @@
             this.BeginButton = new System.Windows.Forms.Button();
             this.PivotBox = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.SaveEventLogBox = new System.Windows.Forms.CheckBox();
+            this.OpenLogFolderButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.NonBaseVariableBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BaseVariableBox)).BeginInit();
             this.SuspendLayout();
@@ -148,6 +150,32 @@
             this.label3.Tag = "default";
             this.label3.Text = "Pivot szabály:";
             // 
+            // SaveEventLogBox
+            // 
+            this.SaveEventLogBox.AutoSize = true;
+            this.SaveEventLogBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.SaveEventLogBox.Location = new System.Drawing.Point(116, 25);
+            this.SaveEventLogBox.Name = "SaveEventLogBox";
+            this.SaveEventLogBox.Size = new System.Drawing.Size(277, 36);
+            this.SaveEventLogBox.TabIndex = 7;
+            this.SaveEventLogBox.Tag = "default";
+            this.SaveEventLogBox.Text = "Log fájlba mentése";
+            this.SaveEventLogBox.UseVisualStyleBackColor = true;
+            this.SaveEventLogBox.CheckedChanged += new System.EventHandler(this.SaveEventLogBox_CheckedChanged);
+            // 
+            // OpenLogFolderButton
+            // 
+            this.OpenLogFolderButton.Enabled = false;
+            this.OpenLogFolderButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.OpenLogFolderButton.Location = new System.Drawing.Point(116, 67);
+            this.OpenLogFolderButton.Name = "OpenLogFolderButton";
+            this.OpenLogFolderButton.Size = new System.Drawing.Size(262, 107);
+            this.OpenLogFolderButton.TabIndex = 8;
+            this.OpenLogFolderButton.Tag = "default";
+            this.OpenLogFolderButton.Text = "Mappa megnyitása";
+            this.OpenLogFolderButton.UseVisualStyleBackColor = true;
+            this.OpenLogFolderButton.Click += new System.EventHandler(this.OpenLogFolderButton_Click);
+            // 
             // MainForm
             // 
             this.AcceptButton = this.BeginButton;
@@ -156,6 +184,8 @@
             this.AutoScroll = true;
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
             this.ClientSize = new System.Drawing.Size(1472, 653);
+            this.Controls.Add(this.OpenLogFolderButton);
+            this.Controls.Add(this.SaveEventLogBox);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.PivotBox);
             this.Controls.Add(this.BeginButton);
@@ -184,6 +214,8 @@
         private System.Windows.Forms.Button BeginButton;
         private System.Windows.Forms.ComboBox PivotBox;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.CheckBox SaveEventLogBox;
+        private System.Windows.Forms.Button OpenLogFolderButton;
     }
 }
 

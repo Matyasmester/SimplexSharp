@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -24,6 +26,9 @@ namespace Simplex
         private const int yPadding = 40;
 
         private const string DefaultTag = "default";
+
+        private static readonly string AppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        private static readonly string logPath = Path.Combine(AppDataPath, "simplex_log.txt");
 
         private readonly Font baseFont = new Font("Microsoft Sans Serif", 12);
 
@@ -169,29 +174,27 @@ namespace Simplex
 
             for(int i = 0; i < currentDict.Count - 1; i++)
             {
-                var row = new List<KeyValuePair<string, double>>();
+                string baseVarName = "x" + (i + 1 + nonBaseVariableCount);
+
+                BaseVariable baseVar = new BaseVariable(baseVarName);
 
                 var current = currentDict[i];
 
-                row.Add(new KeyValuePair<string, double>("c", (double)current.First().Value));
+                baseVar.Constant = (double)current.First().Value;
 
                 for (int k = 1; k < current.Count; k++)
                 {
                     string nonBaseVarName = "x" + k;
 
-                    row.Add(new KeyValuePair<string, double>(nonBaseVarName, (double)current[k].Value));
+                    baseVar.AddVariable(new NonBaseVariable(nonBaseVarName, (double)current[k].Value));
                 }
 
-                string baseVarName = "x" + (i + 1 + nonBaseVariableCount);
-
-                Simplex.dict.Add(new KeyValuePair<string, List<KeyValuePair<string, double>>>(baseVarName, row));
+                Simplex.dict.Add(baseVar);
             }
-
-            var function = new List<KeyValuePair<string, double>>();
 
             var functionRow = currentDict.Last();
 
-            function.Add(new KeyValuePair<string, double>("c", (double)functionRow.First().Value));
+            Simplex.function.Constant = (double)functionRow.First().Value;
 
             for (int i = 1; i < functionRow.Count; i++)
             {
@@ -199,14 +202,17 @@ namespace Simplex
 
                 var current = functionRow[i];
 
-                function.Add(new KeyValuePair<string, double>(nonBaseVarName, (double)current.Value));
+                Simplex.function.AddVariable(new NonBaseVariable(nonBaseVarName, (double)current.Value));
             }
-
-            Simplex.function = function;
 
             Simplex.Optimize((PivotRule)PivotBox.SelectedIndex);
 
             MessageBox.Show(Simplex.GetEventLog());
+
+            if(SaveEventLogBox.Checked)
+            {
+                if(!Simplex.SaveLog(logPath)) MessageBox.Show("Hiba tortent a mentes soran!");
+            }
         }
 
         private void PivotBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -238,8 +244,20 @@ namespace Simplex
             upDown.Enabled = true;
             upDown.Size = upDownSize;
             upDown.TextAlign = HorizontalAlignment.Center;
+            upDown.DecimalPlaces = 1;
 
             return upDown;
+        }
+
+        private void SaveEventLogBox_CheckedChanged(object sender, EventArgs e)
+        {
+            OpenLogFolderButton.Enabled = SaveEventLogBox.Checked;
+        }
+
+        private void OpenLogFolderButton_Click(object sender, EventArgs e)
+        {
+            try { Process.Start(AppDataPath); }
+            catch (Exception) { MessageBox.Show("Nem sikerult megnyitni a mappat!"); }
         }
     }
 }
