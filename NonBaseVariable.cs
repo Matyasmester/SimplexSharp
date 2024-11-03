@@ -18,7 +18,7 @@ namespace Simplex
             private set => name = value;
         }
 
-        public double Coefficient 
+        public double Coefficient
         {
             get => coefficient;
             private set => this.coefficient = value;
@@ -32,7 +32,7 @@ namespace Simplex
 
         public override string ToString()
         {
-            return name + " * " + Math.Round(coefficient, 2);
+            return Math.Round(coefficient, 2) + Simplex.SubscriptNumbers(name);
         }
     }
 }

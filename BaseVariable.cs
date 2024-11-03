@@ -45,7 +45,7 @@ namespace Simplex
 
         public override string ToString()
         {
-            string retval = name + " = " + Math.Round(constant, 2).ToString();
+            string retval = Simplex.SubscriptNumbers(name) + " = " + Math.Round(constant, 2).ToString();
 
             foreach (NonBaseVariable variable in variables)
             {

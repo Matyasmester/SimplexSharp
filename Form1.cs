@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace Simplex
 {
@@ -17,20 +18,20 @@ namespace Simplex
     {
         private readonly Point startPoint = new Point(80, 200);
 
-        private readonly Size labelSize = new Size(35, 20);
-        private readonly Size upDownSize = new Size(50, 30);
+        private readonly Size labelSize = new Size(35, 30);
+        private readonly Size upDownSize = new Size(70, 30);
 
         private const int baseLabelWidth = 70;
 
-        private const int xPadding = 50;
-        private const int yPadding = 40;
+        private const int xPadding = 70;
+        private const int yPadding = 50;
 
         private const string DefaultTag = "default";
 
         private static readonly string AppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         private static readonly string logPath = Path.Combine(AppDataPath, "simplex_log.txt");
 
-        private readonly Font baseFont = new Font("Microsoft Sans Serif", 12);
+        private readonly Font baseFont = new Font("Microsoft Sans Serif", 16);
 
         private string[] pivotRules = new string[] { "Klasszikus", "Bland" };
 
@@ -61,7 +62,7 @@ namespace Simplex
             for (int i = 0; i < BaseVariableBox.Value; i++)
             {
                 int baseIndex = (i + 1) + (int)NonBaseVariableBox.Value;
-                Label baseVariableLabel = CreateDefaultLabel("x" + baseIndex + " = ", new Point(x - baseLabelWidth, currY));
+                Label baseVariableLabel = CreateDefaultLabel(Simplex.SubscriptNumbers("x" + baseIndex) + " = ", new Point(x - baseLabelWidth, currY));
 
                 baseVariableLabel.Width = baseLabelWidth;
                 baseVariableLabel.ForeColor = Color.DarkRed;
@@ -113,7 +114,7 @@ namespace Simplex
                 
                 currX += xPadding;
 
-                Label label = CreateDefaultLabel("x" + (i + 1), new Point(currX, y));
+                Label label = CreateDefaultLabel(Simplex.SubscriptNumbers("x" + (i + 1)), new Point(currX, y));
 
                 this.Controls.Add(label);
                 this.Controls.Add(upDown);
@@ -170,7 +171,7 @@ namespace Simplex
         {
             int nonBaseVariableCount = (int)NonBaseVariableBox.Value;
 
-            Simplex.dict.Clear();
+            Simplex.Reset();
 
             for(int i = 0; i < currentDict.Count - 1; i++)
             {
