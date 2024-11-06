@@ -3,12 +3,12 @@ A C# WinForms implementation of the Simplex optimization algorithm.
 
 Currently supports only Hungarian language.
 
-Classic iteration:
+Main form:
 
-![simplex](https://github.com/user-attachments/assets/91e21a68-8a5a-454b-ab5b-edc93a9e9dea)
+![simplex3](https://github.com/user-attachments/assets/787a204b-fdba-493b-a4a1-4b12d5eaf2fe)
 
-Bland iteration:
+Results form:
 
-![simplex2](https://github.com/user-attachments/assets/cd0f79a1-4214-4bbc-bb3c-edb4c298e748)
+![simplex4](https://github.com/user-attachments/assets/3e000190-7a46-4432-9717-8cee7aa12d45)
 
 It's a little yellow, a little sour, but it's ours.
