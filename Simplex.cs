@@ -41,7 +41,7 @@ namespace Simplex
 
             string enteringName = enteringVariable.Name;
 
-            eventLog += "Valasztott belepo valtozo: " + enteringName + "\n";
+            eventLog += "Valasztott belepo valtozo: " + SubscriptNumbers(enteringName) + "\n";
 
             // Find negative coeffs in every base variable line, then get the minimum 
             // of ratio (coeff / constant)
@@ -87,7 +87,7 @@ namespace Simplex
             if (leavingConstant == 0) eventLog += "[!] Degeneralt szotarunk van. [!]\n";
 
             eventLog += "Legkisebb talalt hanyados: " + Math.Round(minimumRatio, 3) + "\n";
-            eventLog += "Valasztott kilepo valtozo: " + leavingName + "\n\n";
+            eventLog += "Valasztott kilepo valtozo: " + SubscriptNumbers(leavingName) + "\n\n";
 
             // Now we express the entering from the leaving variable's row
             int leavingVariableIndex = dict.IndexOf(leavingVariable);
@@ -217,7 +217,7 @@ namespace Simplex
                 retval += "\n";
             }
 
-            retval += "-----------------------------\n";
+            retval += "----------------------------------\n";
 
             retval += function.ToString() + "\n";
 

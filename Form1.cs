@@ -208,7 +208,10 @@ namespace Simplex
 
             Simplex.Optimize((PivotRule)PivotBox.SelectedIndex);
 
-            MessageBox.Show(Simplex.GetEventLog());
+            using(PopupForm popupForm = new PopupForm())
+            {
+                popupForm.Show(Simplex.GetEventLog());
+            }
 
             if(SaveEventLogBox.Checked)
             {
