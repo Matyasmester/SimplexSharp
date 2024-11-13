@@ -12,10 +12,18 @@ namespace Simplex
 
         private double coefficient;
 
+        private int index;
+
         public string Name
         { 
             get => name; 
             private set => name = value;
+        }
+
+        public int Index
+        {
+            get => index;
+            private set => index = value;
         }
 
         public double Coefficient
@@ -24,15 +32,17 @@ namespace Simplex
             private set => this.coefficient = value;
         }
 
-        public NonBaseVariable(string name, double coefficient)
+        public NonBaseVariable(string name, double coefficient, int index)
         {
             this.name = name;
             this.coefficient = coefficient;
+            this.index = index;
         }
 
         public override string ToString()
         {
-            return Math.Round(coefficient, 2) + Simplex.SubscriptNumbers(name);
+            return  coefficient >= 0 ? " + " + Math.Round(coefficient, 2) + Simplex.SubscriptNumbers(name) :
+                    " - " + Math.Round(-1 * coefficient, 2) + Simplex.SubscriptNumbers(name);
         }
     }
 }

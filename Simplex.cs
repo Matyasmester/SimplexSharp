@@ -28,6 +28,8 @@ namespace Simplex
 
             NonBaseVariable enteringVariable;
 
+            positiveCoeffs = positiveCoeffs.OrderBy(x => x.Index).ToList();
+
             if(rule == PivotRule.Classic)
             {
                 // Select lowest index of biggest coefficient
@@ -96,7 +98,7 @@ namespace Simplex
 
             leavingVariable.Variables.RemoveAll(x => x.Name.Equals(enteringName));
 
-            BaseVariable pivotVar = new BaseVariable(enteringName);
+            BaseVariable pivotVar = new BaseVariable(enteringName, enteringVariable.Index);
             pivotVar.Constant = -1 * leavingVariable.Constant / enteringValue;
 
             foreach(NonBaseVariable var in leavingVariable.Variables)
@@ -104,13 +106,13 @@ namespace Simplex
                 pivotVar.AddVariable(var);
             }
 
-            pivotVar.AddVariable(new NonBaseVariable(leavingName, -1));
+            pivotVar.AddVariable(new NonBaseVariable(leavingName, -1, leavingVariable.Index));
 
             for(int i = 0; i < pivotVar.Variables.Count; i++)
             {
                 var current = pivotVar.Variables[i];
 
-                pivotVar.Variables[i] = new NonBaseVariable(current.Name, -1 * current.Coefficient / enteringValue);
+                pivotVar.Variables[i] = new NonBaseVariable(current.Name, -1 * current.Coefficient / enteringValue, current.Index);
             }
 
             dict[leavingVariableIndex] = pivotVar;
@@ -124,9 +126,9 @@ namespace Simplex
 
                 var row = dict[i].Variables;
 
-                BaseVariable newRow = new BaseVariable(varName);
+                BaseVariable newRow = new BaseVariable(varName, dict[i].Index);
 
-                NonBaseVariable currentEntering = FindByName(row, enteringName);
+                NonBaseVariable currentEntering = FindByName(row, enteringName, enteringVariable.Index);
 
                 double coefficient = currentEntering.Coefficient;
 
@@ -140,11 +142,11 @@ namespace Simplex
 
                     if (pivotName.Equals(enteringName)) continue;
 
-                    NonBaseVariable current = FindByName(row, pivotName);
+                    NonBaseVariable current = FindByName(row, pivotName, pivot.Index);
 
                     double newValue = current.Coefficient + (pivot.Coefficient * coefficient);
 
-                    NonBaseVariable substituted = new NonBaseVariable(pivotName, newValue);
+                    NonBaseVariable substituted = new NonBaseVariable(pivotName, newValue, pivot.Index);
 
                     newRow.AddVariable(substituted);
                 }
@@ -152,7 +154,7 @@ namespace Simplex
                 dict[i] = newRow;
             }
 
-            NonBaseVariable funcEntering = FindByName(function.Variables, enteringName);
+            NonBaseVariable funcEntering = FindByName(function.Variables, enteringName, enteringVariable.Index);
 
             double funcCoefficient = funcEntering.Coefficient;
 
@@ -169,21 +171,24 @@ namespace Simplex
 
                 if (pivot.Name.Equals(enteringVariable.Name)) continue;
 
-                NonBaseVariable current = FindByName(function.Variables, pivotName);
+                NonBaseVariable current = FindByName(function.Variables, pivotName, pivot.Index);
 
                 double newValue = current.Coefficient + (pivot.Coefficient * funcCoefficient);
 
-                NonBaseVariable substituted = new NonBaseVariable(pivotName, newValue);
+                NonBaseVariable substituted = new NonBaseVariable(pivotName, newValue, pivot.Index);
 
                 newFunc.AddVariable(substituted);
             }
 
             function = newFunc;
+
+            dict.OrderBy(x => x.Index);
+            function.Variables.OrderBy(x => x.Index);
         }
 
-        private static NonBaseVariable FindByName(List<NonBaseVariable> list, string name)
+        private static NonBaseVariable FindByName(List<NonBaseVariable> list, string name, int index)
         {
-            return list.Any(x => x.Name.Equals(name)) ? list.First(x => x.Name.Equals(name)) : new NonBaseVariable(name, 0);
+            return list.Any(x => x.Name.Equals(name)) ? list.First(x => x.Name.Equals(name)) : new NonBaseVariable(name, 0, index);
         }
 
         private static bool IsCurrentOptimal()
@@ -256,6 +261,7 @@ namespace Simplex
         {
             dict.Clear();
             function = new SimplexFunction();
+            isNotLimited = false;
         }
 
         public static bool SaveLog(string path)

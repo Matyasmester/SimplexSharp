@@ -37,6 +37,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.SaveEventLogBox = new System.Windows.Forms.CheckBox();
             this.OpenLogFolderButton = new System.Windows.Forms.Button();
+            this.SaveDictButton = new System.Windows.Forms.Button();
+            this.LoadDictButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.NonBaseVariableBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BaseVariableBox)).BeginInit();
             this.SuspendLayout();
@@ -118,7 +120,7 @@
             // BeginButton
             // 
             this.BeginButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.BeginButton.Location = new System.Drawing.Point(597, 12);
+            this.BeginButton.Location = new System.Drawing.Point(771, 12);
             this.BeginButton.Name = "BeginButton";
             this.BeginButton.Size = new System.Drawing.Size(262, 107);
             this.BeginButton.TabIndex = 4;
@@ -154,7 +156,7 @@
             // 
             this.SaveEventLogBox.AutoSize = true;
             this.SaveEventLogBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.SaveEventLogBox.Location = new System.Drawing.Point(116, 25);
+            this.SaveEventLogBox.Location = new System.Drawing.Point(25, 25);
             this.SaveEventLogBox.Name = "SaveEventLogBox";
             this.SaveEventLogBox.Size = new System.Drawing.Size(277, 36);
             this.SaveEventLogBox.TabIndex = 7;
@@ -167,7 +169,7 @@
             // 
             this.OpenLogFolderButton.Enabled = false;
             this.OpenLogFolderButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
-            this.OpenLogFolderButton.Location = new System.Drawing.Point(116, 67);
+            this.OpenLogFolderButton.Location = new System.Drawing.Point(25, 67);
             this.OpenLogFolderButton.Name = "OpenLogFolderButton";
             this.OpenLogFolderButton.Size = new System.Drawing.Size(262, 107);
             this.OpenLogFolderButton.TabIndex = 8;
@@ -175,6 +177,30 @@
             this.OpenLogFolderButton.Text = "Mappa megnyitása";
             this.OpenLogFolderButton.UseVisualStyleBackColor = true;
             this.OpenLogFolderButton.Click += new System.EventHandler(this.OpenLogFolderButton_Click);
+            // 
+            // SaveDictButton
+            // 
+            this.SaveDictButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.SaveDictButton.Location = new System.Drawing.Point(436, 12);
+            this.SaveDictButton.Name = "SaveDictButton";
+            this.SaveDictButton.Size = new System.Drawing.Size(204, 93);
+            this.SaveDictButton.TabIndex = 9;
+            this.SaveDictButton.Tag = "default";
+            this.SaveDictButton.Text = "Szótár mentése";
+            this.SaveDictButton.UseVisualStyleBackColor = true;
+            this.SaveDictButton.Click += new System.EventHandler(this.SaveDictButton_Click);
+            // 
+            // LoadDictButton
+            // 
+            this.LoadDictButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(238)));
+            this.LoadDictButton.Location = new System.Drawing.Point(436, 111);
+            this.LoadDictButton.Name = "LoadDictButton";
+            this.LoadDictButton.Size = new System.Drawing.Size(204, 93);
+            this.LoadDictButton.TabIndex = 10;
+            this.LoadDictButton.Tag = "default";
+            this.LoadDictButton.Text = "Szótár betöltése";
+            this.LoadDictButton.UseVisualStyleBackColor = true;
+            this.LoadDictButton.Click += new System.EventHandler(this.LoadDictButton_Click);
             // 
             // MainForm
             // 
@@ -184,6 +210,8 @@
             this.AutoScroll = true;
             this.BackColor = System.Drawing.SystemColors.ActiveCaption;
             this.ClientSize = new System.Drawing.Size(1472, 653);
+            this.Controls.Add(this.LoadDictButton);
+            this.Controls.Add(this.SaveDictButton);
             this.Controls.Add(this.OpenLogFolderButton);
             this.Controls.Add(this.SaveEventLogBox);
             this.Controls.Add(this.label3);
@@ -216,6 +244,8 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox SaveEventLogBox;
         private System.Windows.Forms.Button OpenLogFolderButton;
+        private System.Windows.Forms.Button SaveDictButton;
+        private System.Windows.Forms.Button LoadDictButton;
     }
 }
 

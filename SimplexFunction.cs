@@ -41,7 +41,7 @@ namespace Simplex
 
             foreach(NonBaseVariable variable in variables)
             {
-                retval += " + " + variable.ToString();
+                retval += variable.ToString();
             }
 
             return retval;

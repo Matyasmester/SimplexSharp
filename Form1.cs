@@ -167,17 +167,18 @@ namespace Simplex
             InstantiateControls();
         }
 
-        private void BeginButton_Click(object sender, EventArgs e)
+        private void SetupDict()
         {
             int nonBaseVariableCount = (int)NonBaseVariableBox.Value;
 
             Simplex.Reset();
 
-            for(int i = 0; i < currentDict.Count - 1; i++)
+            for (int i = 0; i < currentDict.Count - 1; i++)
             {
-                string baseVarName = "x" + (i + 1 + nonBaseVariableCount);
+                int baseIndex = (i + 1 + nonBaseVariableCount);
+                string baseVarName = "x" + baseIndex;
 
-                BaseVariable baseVar = new BaseVariable(baseVarName);
+                BaseVariable baseVar = new BaseVariable(baseVarName, baseIndex);
 
                 var current = currentDict[i];
 
@@ -187,7 +188,7 @@ namespace Simplex
                 {
                     string nonBaseVarName = "x" + k;
 
-                    baseVar.AddVariable(new NonBaseVariable(nonBaseVarName, (double)current[k].Value));
+                    baseVar.AddVariable(new NonBaseVariable(nonBaseVarName, (double)current[k].Value, k));
                 }
 
                 Simplex.dict.Add(baseVar);
@@ -203,8 +204,13 @@ namespace Simplex
 
                 var current = functionRow[i];
 
-                Simplex.function.AddVariable(new NonBaseVariable(nonBaseVarName, (double)current.Value));
+                Simplex.function.AddVariable(new NonBaseVariable(nonBaseVarName, (double)current.Value, i));
             }
+        }
+
+        private void BeginButton_Click(object sender, EventArgs e)
+        {
+            SetupDict();
 
             Simplex.Optimize((PivotRule)PivotBox.SelectedIndex);
 
@@ -262,6 +268,95 @@ namespace Simplex
         {
             try { Process.Start(AppDataPath); }
             catch (Exception) { MessageBox.Show("Nem sikerult megnyitni a mappat!"); }
+        }
+
+        private void SaveDictButton_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+
+            DialogResult result = dialog.ShowDialog(owner: this);
+
+            if(result == DialogResult.OK)
+            {
+                string path = Path.Combine(dialog.SelectedPath, DateTime.Now.ToString("yyyy-MM-dd-HH-mmss") + "-dict.simplex");
+
+                List<string> lines = new List<string>();
+
+                SetupDict();
+
+                foreach (BaseVariable baseVar in Simplex.dict)
+                {
+                    string line = baseVar.Constant.ToString();
+
+                    foreach(NonBaseVariable nonBaseVar in baseVar.Variables)
+                    {
+                        line += ";" + nonBaseVar.Coefficient;
+                    }
+
+                    lines.Add(line);
+                }
+
+                string functionLine = Simplex.function.Constant.ToString();
+
+                foreach(NonBaseVariable nonBaseVar in Simplex.function.Variables)
+                {
+                    functionLine += ";" + nonBaseVar.Coefficient;
+                }
+
+                lines.Add(functionLine);
+
+                try 
+                { 
+                    File.WriteAllLines(path, lines); 
+                }
+                catch (Exception ex) 
+                { 
+                    MessageBox.Show("Nem sikerult elmenteni a fajlt: \n" + ex.Message); 
+                };
+            }
+
+            dialog.Dispose();
+        }
+
+        private void LoadDictButton_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+
+            DialogResult result = dialog.ShowDialog(owner: this);
+
+            if (result == DialogResult.OK)
+            {
+                List<string> lines;
+
+                try
+                {
+                    lines = File.ReadAllLines(dialog.FileName).ToList();
+                } 
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Nem sikerult betolteni a szotart: \n" + ex.Message);
+                    return;
+                }
+
+                BaseVariableBox.Value = lines.Count - 1;
+                NonBaseVariableBox.Value = lines.First().Split(';').Length - 1;
+
+                for (int i = 0; i < lines.Count; i++)
+                {
+                    var dictLine = currentDict[i];
+
+                    string[] split = lines[i].Split(';');
+
+                    dictLine[0].Value = Convert.ToDecimal(split[0]);
+
+                    for(int k = 1; k < split.Length; k++)
+                    {
+                        dictLine[k].Value = Convert.ToDecimal(split[k]);
+                    }
+                }
+            }
+
+            dialog.Dispose();
         }
     }
 }

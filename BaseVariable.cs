@@ -12,11 +12,19 @@ namespace Simplex
 
         private double constant;
 
+        private int index;
+
         private List<NonBaseVariable> variables;
         public string Name
         {
             get => name;
             private set => name = value;
+        }
+
+        public int Index
+        {
+            get => index;
+            private set => index = value;
         }
 
         public double Constant
@@ -32,9 +40,10 @@ namespace Simplex
         }
 
 
-        public BaseVariable(string name)
+        public BaseVariable(string name, int index)
         {
             this.name = name;
+            this.index = index;
             this.variables = new List<NonBaseVariable>();
         }
 
@@ -48,8 +57,8 @@ namespace Simplex
             string retval = Simplex.SubscriptNumbers(name) + " = " + Math.Round(constant, 2).ToString();
 
             foreach (NonBaseVariable variable in variables)
-            {
-                retval += " + " + variable.ToString();
+            { 
+                retval += variable.ToString();
             }
 
             return retval;
